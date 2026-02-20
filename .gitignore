@@ -1,0 +1,26 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+pyvenv.cfg
+__pycache__/
+*.pyc
+
+# Node.js
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Database (date locale, nu le urci pe GitHub)
+*.sqlite
+*.db
+
+# IDE - WebStorm/IntelliJ
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables / chei secrete
+.env
