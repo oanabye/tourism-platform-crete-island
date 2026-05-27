@@ -1,4 +1,4 @@
-// ==============================
+﻿// ==============================
 // Pac-Man Beach App Backend
 // Node.js + Express + SQLite + JWT
 // ==============================
@@ -11,7 +11,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const db = new sqlite3.Database("./db.sqlite");
+const db = new sqlite3.Database(path.join(__dirname, "db.sqlite"));
+db.serialize(() => {
+    db.run("CREATE TABLE IF NOT EXISTS Users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, role TEXT DEFAULT 'user')");
+    db.run("CREATE TABLE IF NOT EXISTS Plaje (id INTEGER PRIMARY KEY AUTOINCREMENT, nume TEXT NOT NULL, latitudine REAL, longitudine REAL, imagine TEXT, descriere TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS Favorite (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, beach_id INTEGER)");
+    db.run("CREATE TABLE IF NOT EXISTS Recenzii (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, beach_id INTEGER, comentariu TEXT, nota INTEGER, data_postare DATETIME DEFAULT CURRENT_TIMESTAMP)");
+});
 const JWT_SECRET = 'secret_key';
 
 // --- Middlewares ---
@@ -43,12 +49,18 @@ app.post("/register", async (req, res) => {
         db.run(
             "INSERT INTO Users (email, password, role) VALUES (?, ?, ?)",
             [email, hashedPassword, role || 'user'],
-            (err) => {
-                if (err) return res.status(400).json({ message: 'Email already used or DB error' });
-                res.status(201).json({ message: 'User registered successfully!' });
+            function (err) {
+                if (err) {
+                    console.log('DB ERROR:', err);
+                    return res.status(400).json({ message: 'Email already used or DB error' });
+                }
+                // ← lipsea asta
+                return res.status(201).json({ message: 'Account created', userId: this.lastID });
             }
         );
-    } catch (e) { res.status(500).send(); }
+    } catch (e) {
+        res.status(500).send();
+    }
 });
 
 app.post("/login", (req, res) => {
